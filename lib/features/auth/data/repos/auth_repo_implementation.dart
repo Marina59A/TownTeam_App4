@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:townteam_app/common/errors/exceptions.dart';
 import 'package:townteam_app/common/errors/failures.dart';

@@ -7,7 +7,6 @@ import 'package:townteam_app/features/product/presentaion/view/product_list_page
 class HomePageWidget extends StatelessWidget {
   const HomePageWidget({super.key});
 
-  // Define fixed categories and their paths
   static const Map<String, Map<String, String>> categories = {
     'summer_polo': {
       'path': 'summer/summer',

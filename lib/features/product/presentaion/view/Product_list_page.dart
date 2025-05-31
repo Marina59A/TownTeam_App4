@@ -202,7 +202,7 @@ class ProductListPage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.chat, color: Colors.white),
+            icon: const Icon(Icons.favorite, color: Colors.white),
             onPressed: () {
               Navigator.pushNamed(context, LoginPage.id);
             },
@@ -247,32 +247,6 @@ class ProductListPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Filter'),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Sort'),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance

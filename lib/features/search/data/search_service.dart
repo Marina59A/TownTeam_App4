@@ -15,14 +15,12 @@ class SearchService {
           .collection('products')
           .get();
 
-      // Search in Women's collection
       final womensSnapshot = await _firestore
           .collection('categories')
           .doc('women')
           .collection('products')
           .get();
 
-      // Search in Kids' collection
       final kidsSnapshot = await _firestore
           .collection('categories')
           .doc('kids')
@@ -37,21 +35,18 @@ class SearchService {
         return name.contains(searchTerm) || description.contains(searchTerm);
       }
 
-      // Process Men's results
       allResults.addAll(mensSnapshot.docs.where(matchesSearch).map((doc) => {
             'id': doc.id,
             'category': 'men',
             ...doc.data() as Map<String, dynamic>,
           }));
 
-      // Process Women's results
       allResults.addAll(womensSnapshot.docs.where(matchesSearch).map((doc) => {
             'id': doc.id,
             'category': 'women',
             ...doc.data() as Map<String, dynamic>,
           }));
 
-      // Process Kids' results
       allResults.addAll(kidsSnapshot.docs.where(matchesSearch).map((doc) => {
             'id': doc.id,
             'category': 'kids',
@@ -65,7 +60,6 @@ class SearchService {
     }
   }
 
-  // Get popular collections
   Future<List<Map<String, dynamic>>> getPopularCollections() async {
     try {
       final QuerySnapshot result = await _firestore

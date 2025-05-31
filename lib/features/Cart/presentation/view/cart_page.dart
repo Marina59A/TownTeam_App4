@@ -67,45 +67,6 @@ class _CartPageState extends State<CartPage> {
 
           return Column(
             children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.card_giftcard,
-                            color: Colors.black54),
-                        label: const Text('Gift Card',
-                            style: TextStyle(color: Colors.black54)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.black12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.discount_outlined,
-                            color: Colors.black54),
-                        label: const Text('Use Discount Code',
-                            style: TextStyle(color: Colors.black54)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.black12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -219,20 +180,6 @@ class _CartPageState extends State<CartPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.edit_outlined,
-                            size: 20, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        const Text('Add an Order Note',
-                            style:
-                                TextStyle(fontSize: 16, color: Colors.black54)),
-                        const Spacer(),
-                        const Icon(Icons.keyboard_arrow_up,
-                            size: 20, color: Colors.black54),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
