@@ -3,16 +3,25 @@ import 'package:provider/provider.dart';
 import 'package:townteam_app/common/models/cart_provider.dart';
 import 'package:townteam_app/common/models/favorites_provider.dart';
 import 'package:townteam_app/common/models/product.dart';
+import 'package:townteam_app/features/account/presentation/view/my_favorites_page.dart';
+import 'package:townteam_app/common/models/auth_provider.dart';
+import 'package:townteam_app/features/auth/presentation/view/login_page.dart';
 // import 'package:carousel_slider/carousel_controller.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Product product;
   final String? imageUrl;
+  final String? collectionPath;
+  final String? documentPath;
+  final String? subcollectionPath;
 
   const ProductDetailsPage({
     super.key,
     required this.product,
     this.imageUrl,
+    this.collectionPath,
+    this.documentPath,
+    this.subcollectionPath,
   });
 
   @override
@@ -44,6 +53,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         title: const Text('TOWN TEAM', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return IconButton(
+                icon: const Icon(Icons.favorite, color: Colors.white),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  authProvider.isLoggedIn ? MyFavoritesPage.id : LoginPage.id,
+                ),
+              );
+            },
+          ),
           Stack(
             children: [
               IconButton(
@@ -100,25 +120,45 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 Positioned(
                   top: 16,
                   right: 16,
-                  child: Consumer<FavoritesProvider>(
-                    builder: (context, favoritesProvider, child) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            favoritesProvider.isFavorite(widget.product.id)
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color:
-                                favoritesProvider.isFavorite(widget.product.id)
-                                    ? Colors.red
-                                    : Colors.black,
+                  child: Consumer2<FavoritesProvider, AuthProvider>(
+                    builder: (context, favoritesProvider, authProvider, child) {
+                      final isFavorite =
+                          favoritesProvider.isFavorite(widget.product.id);
+                      return GestureDetector(
+                        onTap: () {
+                          if (!authProvider.isLoggedIn) {
+                            Navigator.pushNamed(context, LoginPage.id);
+                            return;
+                          }
+                          favoritesProvider.toggleFavorite(
+                            widget.product.id,
+                            product: widget.product,
+                            collectionPath: widget.collectionPath,
+                            documentPath: widget.documentPath,
+                            subcollectionPath: widget.subcollectionPath,
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFavorite
+                                    ? 'Removed from favorites'
+                                    : 'Added to favorites',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            shape: BoxShape.circle,
                           ),
-                          onPressed: () => favoritesProvider
-                              .toggleFavorite(widget.product.id),
+                          child: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.black,
+                            size: 28,
+                          ),
                         ),
                       );
                     },

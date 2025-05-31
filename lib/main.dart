@@ -39,8 +39,16 @@ class TownTeamApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => NavProvider()),
-        ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
+          create: (_) => CartProvider(),
+          update: (_, auth, cart) {
+            if (auth.userId != null) {
+              cart?.setUserId(auth.userId!);
+            }
+            return cart ?? CartProvider();
+          },
+        ),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],

@@ -303,6 +303,9 @@ class ProductListPage extends StatelessWidget {
                             builder: (context) => ProductDetailsPage(
                               product: product,
                               imageUrl: product.imageUrl,
+                              collectionPath: collectionPath,
+                              documentPath: documentPath,
+                              subcollectionPath: subcollectionPath,
                             ),
                           ),
                         );

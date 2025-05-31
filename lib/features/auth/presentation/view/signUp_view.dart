@@ -122,7 +122,10 @@ class _SignupViewState extends State<SignupView> {
 
         if (userCredential.user != null) {
           // Store user data in Firestore
-          await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .set({
             'name': userCredential.user!.email?.split('@')[0] ?? 'User',
             'email': userCredential.user!.email,
             'uid': userCredential.user!.uid,
@@ -131,8 +134,9 @@ class _SignupViewState extends State<SignupView> {
           });
 
           if (!mounted) return;
-          final authProvider = Provider.of<AuthProvider>(context, listen: false);
-          authProvider.login(userCredential.user!.uid);
+          final authProvider =
+              Provider.of<AuthProvider>(context, listen: false);
+          authProvider.login(userCredential.user!.uid, context);
           _showSuccessSnackBar('Account created successfully!');
           Navigator.pop(context);
         }
@@ -293,7 +297,8 @@ class _SignupViewState extends State<SignupView> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                               strokeWidth: 2,
                             ),
                           )

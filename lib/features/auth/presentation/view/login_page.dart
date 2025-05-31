@@ -125,16 +125,22 @@ class _LoginPageState extends State<LoginPage> {
 
         if (userCredential.user != null) {
           // Store user data in Firestore
-          await _firestore.collection('users').doc(userCredential.user!.uid).set({
-            'name': userCredential.user!.displayName ?? userCredential.user!.email?.split('@')[0] ?? 'User',
+          await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .set({
+            'name': userCredential.user!.displayName ??
+                userCredential.user!.email?.split('@')[0] ??
+                'User',
             'email': userCredential.user!.email,
             'uid': userCredential.user!.uid,
             'lastLogin': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
 
           if (!mounted) return;
-          final authProvider = Provider.of<AuthProvider>(context, listen: false);
-          authProvider.login(userCredential.user!.uid);
+          final authProvider =
+              Provider.of<AuthProvider>(context, listen: false);
+          await authProvider.login(userCredential.user!.uid, context);
           _showSuccessSnackBar('Successfully logged in!');
           Navigator.pop(context);
         }
@@ -265,7 +271,8 @@ class _LoginPageState extends State<LoginPage> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                               strokeWidth: 2,
                             ),
                           )

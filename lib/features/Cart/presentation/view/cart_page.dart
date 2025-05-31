@@ -43,7 +43,8 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Future<void> showCheckoutDialog(List cartItems, String userId, String? userEmail) async {
+  Future<void> showCheckoutDialog(
+      List cartItems, String userId, String? userEmail) async {
     final _formKey = GlobalKey<FormState>();
     String name = '';
     String address = '';
@@ -68,22 +69,27 @@ class _CartPageState extends State<CartPage> {
                     children: [
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Name'),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter your name' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Enter your name' : null,
                         onChanged: (v) => name = v,
                       ),
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Address'),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter your address' : null,
+                        validator: (v) => v == null || v.isEmpty
+                            ? 'Enter your address'
+                            : null,
                         onChanged: (v) => address = v,
                       ),
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Phone'),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter your phone' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Enter your phone' : null,
                         onChanged: (v) => phone = v,
                       ),
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'City'),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter your city' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Enter your city' : null,
                         onChanged: (v) => city = v,
                       ),
                       const SizedBox(height: 16),
@@ -94,7 +100,8 @@ class _CartPageState extends State<CartPage> {
                               title: const Text('Cash on Delivery'),
                               value: 'cod',
                               groupValue: paymentMethod,
-                              onChanged: (v) => setState(() => paymentMethod = v!),
+                              onChanged: (v) =>
+                                  setState(() => paymentMethod = v!),
                             ),
                           ),
                           Expanded(
@@ -102,15 +109,17 @@ class _CartPageState extends State<CartPage> {
                               title: const Text('PayPal'),
                               value: 'paypal',
                               groupValue: paymentMethod,
-                              onChanged: (v) => setState(() => paymentMethod = v!),
+                              onChanged: (v) =>
+                                  setState(() => paymentMethod = v!),
                             ),
                           ),
                         ],
                       ),
-                      if (isLoading) const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
-                      ),
+                      if (isLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
                     ],
                   ),
                 ),
@@ -121,57 +130,83 @@ class _CartPageState extends State<CartPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: isLoading ? null : () async {
-                    if (!_formKey.currentState!.validate()) return;
-                    setState(() => isLoading = true);
-                    try {
-                      if (paymentMethod == 'paypal') {
-                        final token = await PayPalService.getAccessToken();
-                        if (token == null) throw Exception('PayPal token error');
-                        final total = cartItems.fold<double>(0, (sum, item) => sum + (item.product.discountedPrice * item.quantity));
-                        final orderId = await PayPalService.createOrder(token, total.toStringAsFixed(2));
-                        if (orderId == null) throw Exception('PayPal order error');
-                        transactionId = orderId;
-                      }
-                      final orderData = {
-                        'address': address,
-                        'cartItems': cartItems.map((item) => {
-                          'category': item.product.category,
-                          'id': item.product.id,
-                          'image': item.product.imageUrl,
-                          'price': item.product.discountedPrice,
-                          'quantity': item.quantity,
-                          'title': item.product.name,
-                          'unitPrice': item.product.discountedPrice,
-                        }).toList(),
-                        'city': city,
-                        'createdAt': DateTime.now().toIso8601String(),
-                        'email': userEmail ?? '',
-                        'firstName': name,
-                        'lastName': '',
-                        'paymentMethod': paymentMethod,
-                        'phone': phone,
-                        'total': cartItems.fold<double>(0, (sum, item) => sum + (item.product.discountedPrice * item.quantity)),
-                        'transactionId': transactionId,
-                        'userId': userId,
-                      };
-                      await placeOrder(orderData);
-                      if (mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order placed successfully!')));
-                        Provider.of<CartProvider>(context, listen: false).clear();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyOrdersPage(userId: userId),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      setState(() => isLoading = false);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to place order.')));
-                    }
-                  },
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (!_formKey.currentState!.validate()) return;
+                          setState(() => isLoading = true);
+                          try {
+                            if (paymentMethod == 'paypal') {
+                              final token =
+                                  await PayPalService.getAccessToken();
+                              if (token == null)
+                                throw Exception('PayPal token error');
+                              final total = cartItems.fold<double>(
+                                  0,
+                                  (sum, item) =>
+                                      sum +
+                                      (item.product.discountedPrice *
+                                          item.quantity));
+                              final orderId = await PayPalService.createOrder(
+                                  token, total.toStringAsFixed(2));
+                              if (orderId == null)
+                                throw Exception('PayPal order error');
+                              transactionId = orderId;
+                            }
+                            final orderData = {
+                              'address': address,
+                              'cartItems': cartItems
+                                  .map((item) => {
+                                        'category': item.product.category,
+                                        'id': item.product.id,
+                                        'image': item.product.imageUrl,
+                                        'price': item.product.discountedPrice,
+                                        'quantity': item.quantity,
+                                        'title': item.product.name,
+                                        'unitPrice':
+                                            item.product.discountedPrice,
+                                      })
+                                  .toList(),
+                              'city': city,
+                              'createdAt': DateTime.now().toIso8601String(),
+                              'email': userEmail ?? '',
+                              'firstName': name,
+                              'lastName': '',
+                              'paymentMethod': paymentMethod,
+                              'phone': phone,
+                              'total': cartItems.fold<double>(
+                                  0,
+                                  (sum, item) =>
+                                      sum +
+                                      (item.product.discountedPrice *
+                                          item.quantity)),
+                              'transactionId': transactionId,
+                              'userId': userId,
+                            };
+                            await placeOrder(orderData);
+                            if (mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Order placed successfully!')));
+                              Provider.of<CartProvider>(context, listen: false)
+                                  .clear();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      MyOrdersPage(userId: userId),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setState(() => isLoading = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Failed to place order.')));
+                          }
+                        },
                   child: const Text('Confirm'),
                 ),
               ],
@@ -218,45 +253,6 @@ class _CartPageState extends State<CartPage> {
 
           return Column(
             children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.card_giftcard,
-                            color: Colors.black54),
-                        label: const Text('Gift Card',
-                            style: TextStyle(color: Colors.black54)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.black12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.discount_outlined,
-                            color: Colors.black54),
-                        label: const Text('Use Discount Code',
-                            style: TextStyle(color: Colors.black54)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.black12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -371,20 +367,6 @@ class _CartPageState extends State<CartPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: [
-                        const Icon(Icons.edit_outlined,
-                            size: 20, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        const Text('Add an Order Note',
-                            style:
-                                TextStyle(fontSize: 16, color: Colors.black54)),
-                        const Spacer(),
-                        const Icon(Icons.keyboard_arrow_up,
-                            size: 20, color: Colors.black54),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
@@ -410,7 +392,8 @@ class _CartPageState extends State<CartPage> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (authProvider.isLoggedIn) {
-                            await showCheckoutDialog(cartItems, authProvider.userId!, authProvider.userEmail);
+                            await showCheckoutDialog(cartItems,
+                                authProvider.userId!, authProvider.userEmail);
                           } else {
                             Navigator.pushNamed(context, LoginPage.id);
                           }

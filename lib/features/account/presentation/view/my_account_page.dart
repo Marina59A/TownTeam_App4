@@ -54,7 +54,8 @@ class MyAccountPage extends StatelessWidget {
                 // User Info Section
                 Text(
                   'Hello, $userName!',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -78,12 +79,12 @@ class MyAccountPage extends StatelessWidget {
                 Center(
                   child: OutlinedButton(
                     onPressed: () {
-                      authProvider.logout();
+                      authProvider.logout(context);
                       Navigator.pop(context);
                     },
                     style: OutlinedButton.styleFrom(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 80, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 80, vertical: 12),
                       side: const BorderSide(color: Colors.black, width: 1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
