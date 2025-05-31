@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "480857308305",
+    "project_id": "town-team-96276",
+    "storage_bucket": "town-team-96276.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480857308305:android:6ee1899a1f8181af245330",
+        "android_client_info": {
+          "package_name": "com.example.first_draft"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBEgzvoCK2EaLjjekBJMDe7OeNlOGNGtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480857308305:android:dd23bf2811ba0211245330",
+        "android_client_info": {
+          "package_name": "com.example.townteam_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBEgzvoCK2EaLjjekBJMDe7OeNlOGNGtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
