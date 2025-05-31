@@ -17,30 +17,29 @@ class _PaymentPageState extends State<PaymentPage> {
   void initState() {
     super.initState();
 
-    _controller =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..setNavigationDelegate(
-            NavigationDelegate(
-              onPageStarted: (url) {
-                debugPrint("Navigating to: $url");
-                if (url.contains("sandbox.paypal.com/checkoutnow")) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Opened PayPal Sandbox Checkout"),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-              onPageFinished: (url) {
-                debugPrint("Page loaded: $url");
-              },
-              onWebResourceError: (error) {
-                debugPrint("WebView Error: ${error.description}");
-              },
-            ),
-          );
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (url) {
+            debugPrint("Navigating to: $url");
+            if (url.contains("sandbox.paypal.com/checkoutnow")) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Opened PayPal Sandbox Checkout"),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          onPageFinished: (url) {
+            debugPrint("Page loaded: $url");
+          },
+          onWebResourceError: (error) {
+            debugPrint("WebView Error: ${error.description}");
+          },
+        ),
+      );
 
     Future.delayed(const Duration(milliseconds: 100), () {
       _controller.loadRequest(Uri.parse(widget.checkoutUrl));

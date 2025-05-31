@@ -1,21 +1,68 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthProvider with ChangeNotifier {
+  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
   bool _isLoggedIn = false;
   String? _userId;
+  String? _userName;
+  String? _userEmail;
 
   bool get isLoggedIn => _isLoggedIn;
   String? get userId => _userId;
+  String? get userName => _userName;
+  String? get userEmail => _userEmail;
 
-  void login(String userId) {
+  AuthProvider() {
+    _init();
+  }
+
+  void _init() {
+    _auth.authStateChanges().listen((firebase_auth.User? user) async {
+      if (user != null) {
+        _isLoggedIn = true;
+        _userId = user.uid;
+        _userEmail = user.email;
+        
+        // Fetch user data from Firestore
+        try {
+          final doc = await _firestore.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            final data = doc.data() as Map<String, dynamic>;
+            _userName = data['name'] as String?;
+          }
+        } catch (e) {
+          print('Error fetching user data: $e');
+        }
+      } else {
+        _isLoggedIn = false;
+        _userId = null;
+        _userName = null;
+        _userEmail = null;
+      }
+      notifyListeners();
+    });
+  }
+
+  Future<void> login(String userId) async {
     _isLoggedIn = true;
     _userId = userId;
     notifyListeners();
   }
 
-  void logout() {
-    _isLoggedIn = false;
-    _userId = null;
-    notifyListeners();
+  Future<void> logout() async {
+    try {
+      await _auth.signOut();
+      _isLoggedIn = false;
+      _userId = null;
+      _userName = null;
+      _userEmail = null;
+      notifyListeners();
+    } catch (e) {
+      print('Error signing out: $e');
+    }
   }
 }

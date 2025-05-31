@@ -1,197 +1,332 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:townteam_app/common/services/git_it_service.dart';
-import 'package:townteam_app/features/auth/domain/repos/auth_repo.dart';
-import 'package:townteam_app/features/auth/presentation/cuibts/signup_cubit/signup_cubit.dart';
-import 'package:townteam_app/features/auth/presentation/widgets/signup_view_body_bloc_consumr.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:townteam_app/common/models/auth_provider.dart';
 
 class SignupView extends StatefulWidget {
-  static const String id = 'signup_page';
+  static const String id = 'signup_view';
 
   const SignupView({super.key});
+
   @override
-  _SignupPageState createState() => _SignupPageState();
+  State<SignupView> createState() => _SignupViewState();
 }
 
-class _SignupPageState extends State<SignupView> {
+class _SignupViewState extends State<SignupView> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
+  final _auth = firebase_auth.FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red.shade700,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green.shade700,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  String _getErrorMessage(firebase_auth.FirebaseAuthException e) {
+    switch (e.code) {
+      case 'email-already-in-use':
+        return 'This email is already registered. Please sign in instead.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'operation-not-allowed':
+        return 'Email/password accounts are not enabled. Please contact support.';
+      case 'weak-password':
+        return 'Password is too weak. Please use a stronger password.';
+      case 'network-request-failed':
+        return 'Network error. Please check your internet connection.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
+  }
+
+  Future<void> _handleSignup() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+        if (userCredential.user != null) {
+          // Store user data in Firestore
+          await _firestore.collection('users').doc(userCredential.user!.uid).set({
+            'name': userCredential.user!.email?.split('@')[0] ?? 'User',
+            'email': userCredential.user!.email,
+            'uid': userCredential.user!.uid,
+            'createdAt': FieldValue.serverTimestamp(),
+            'lastLogin': FieldValue.serverTimestamp(),
+          });
+
+          if (!mounted) return;
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          authProvider.login(userCredential.user!.uid);
+          _showSuccessSnackBar('Account created successfully!');
+          Navigator.pop(context);
+        }
+      } on firebase_auth.FirebaseAuthException catch (e) {
+        print('Firebase Auth Error: ${e.code} - ${e.message}');
+        if (!mounted) return;
+        _showErrorSnackBar(_getErrorMessage(e));
+      } catch (e) {
+        print('Unexpected Error: $e');
+        if (!mounted) return;
+        _showErrorSnackBar('An unexpected error occurred. Please try again.');
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-        create: (context) => SignupCubit(
-              getIt<AuthRepo>(),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 80),
+                Text(
+                  'TOWN TEAM',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 80),
+                TextFormField(
+                  controller: _emailController,
+                  style: const TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    hintText: 'EMAIL',
+                    hintStyle: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 16,
+                      letterSpacing: 1,
+                    ),
+                    enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 0.5),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    errorStyle: const TextStyle(color: Colors.red),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!value.contains('@') || !value.contains('.')) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  controller: _passwordController,
+                  style: const TextStyle(color: Colors.white),
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'PASSWORD',
+                    hintStyle: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 16,
+                      letterSpacing: 1,
+                    ),
+                    enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 0.5),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    errorStyle: const TextStyle(color: Colors.red),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  style: const TextStyle(color: Colors.white),
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'CONFIRM PASSWORD',
+                    hintStyle: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 16,
+                      letterSpacing: 1,
+                    ),
+                    enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white, width: 0.5),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    errorStyle: const TextStyle(color: Colors.red),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 45,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleSignup,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[900],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      disabledBackgroundColor: Colors.grey[800],
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'SIGN UP',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'ALREADY HAVE AN ACCOUNT? SIGN IN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
-        child: Scaffold(
-          body: Builder(builder: (context) {
-            return const SignupViewBlocConsumer();
-          }),
-        ));
+          ),
+        ),
+      ),
+    );
   }
 }
-
-// import 'package:flutter/material.dart';
-
-// class SignupView extends StatefulWidget {
-//   static const String id = 'signup_page';
-
-//   const SignupView({super.key});
-//   @override
-//   _SignupPageState createState() => _SignupPageState();
-// }
-
-// class _SignupPageState extends State<SignupView> {
-//   final _formKey = GlobalKey<FormState>();
-
-//   final nameController = TextEditingController();
-//   final surnameController = TextEditingController();
-//   final emailController = TextEditingController();
-//   final passwordController = TextEditingController();
-//   final repeatPasswordController = TextEditingController();
-
-//   void _submitForm() {
-//     if (_formKey.currentState!.validate()) {
-//       // Process registration
-//       print('All fields are valid');
-//     } else {
-//       _showWarningDialog();
-//     }
-//   }
-
-//   void _showWarningDialog() {
-//     showDialog(
-//       context: context,
-//       builder: (ctx) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-//         title: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             Icon(Icons.warning_amber_rounded, size: 48, color: Colors.orange),
-//             SizedBox(height: 10),
-//             Text('WARNING!'),
-//           ],
-//         ),
-//         content: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             Text(
-//               "Please complete all fields to",
-//               style: TextStyle(fontSize: 20),
-//             ),
-//             Text('continue.', style: TextStyle(fontSize: 20)),
-//           ],
-//         ),
-//         actions: [
-//           Center(
-//             child: SizedBox(
-//               width: double.infinity,
-//               child: Padding(
-//                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-//                 child: MaterialButton(
-//                   onPressed: () => Navigator.of(ctx).pop(),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(6),
-//                   ),
-//                   color: const Color.fromARGB(255, 26, 118, 29),
-//                   child: Padding(
-//                     padding: const EdgeInsets.symmetric(
-//                       vertical: 12.0,
-//                     ),
-//                     child: Text(
-//                       "OK",
-//                       style: TextStyle(color: Colors.white),
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildTextField(
-//     TextEditingController controller,
-//     String label,
-//     bool obscureText,
-//   ) {
-//     return TextFormField(
-//       controller: controller,
-//       obscureText: obscureText,
-//       style: TextStyle(color: Colors.white),
-//       decoration: InputDecoration(
-//         labelText: label,
-//         labelStyle: TextStyle(color: Colors.white),
-//         enabledBorder: UnderlineInputBorder(
-//           borderSide: BorderSide(color: Colors.grey[600]!),
-//         ),
-//         focusedBorder: UnderlineInputBorder(
-//           borderSide: BorderSide(color: Colors.white),
-//         ),
-//       ),
-//       validator: (value) {
-//         if (value == null || value.trim().isEmpty) {
-//           return 'Field is required';
-//         }
-//         return null;
-//       },
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       appBar: AppBar(
-//         backgroundColor: Colors.transparent,
-//         elevation: 0,
-//         leading: IconButton(
-//           icon: Icon(Icons.arrow_back, color: Colors.white),
-//           onPressed: () => Navigator.pop(context),
-//         ),
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-//         child: Form(
-//           key: _formKey,
-//           autovalidateMode: AutovalidateMode.disabled,
-//           child: SingleChildScrollView(
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.stretch,
-//               children: [
-//                 _buildTextField(nameController, 'NAME', false),
-//                 SizedBox(height: 12),
-//                 _buildTextField(surnameController, 'SURNAME', false),
-//                 SizedBox(height: 12),
-//                 _buildTextField(emailController, 'EMAIL', false),
-//                 SizedBox(height: 12),
-//                 _buildTextField(passwordController, 'PASSWORD', true),
-//                 SizedBox(height: 12),
-//                 _buildTextField(
-//                     repeatPasswordController, 'REPEAT PASSWORD', true),
-//                 SizedBox(height: 50),
-//                 MaterialButton(
-//                   onPressed: _submitForm,
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(6),
-//                   ),
-//                   color: Colors.grey[900],
-//                   child: Padding(
-//                     padding: const EdgeInsets.symmetric(vertical: 16.0),
-//                     child: Text(
-//                       "SIGN UP",
-//                       style: TextStyle(
-//                         color: Colors.white,
-//                         fontSize: 20,
-//                         letterSpacing: 1.5,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }

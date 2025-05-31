@@ -31,21 +31,26 @@ class CustomEditProfile extends StatelessWidget {
           displayName += ' ${lastNameController.text.trim()}';
         }
 
+        // Update Firebase Auth display name
         await user.updateDisplayName(displayName);
+
+        // Update Firestore user data
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'firstName': firstNameController.text.trim(),
-          'lastName': lastNameController.text.trim(),
+          'name': displayName, // Changed from firstName/lastName to name
           'phoneNumber': phoneController.text.trim(),
           'email': user.email,
           'uid': user.uid,
+          'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
+        // Reload user to get updated data
         await user.reload();
 
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
         );
+        Navigator.pop(context); // Return to previous screen after successful update
       }
     }
 
@@ -94,9 +99,7 @@ class CustomEditProfile extends StatelessWidget {
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
-                onPressed: () async {
-                  await saveProfile();
-                },
+                onPressed: saveProfile,
                 child:
                     const Text('SAVE', style: TextStyle(color: Colors.white)),
               ),

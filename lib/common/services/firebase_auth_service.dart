@@ -56,10 +56,26 @@ class FirebaseAuthService {
           throw CustomException(message: 'No user found for that email.');
         case 'wrong-password':
           throw CustomException(message: 'Wrong password provided.');
+        case 'invalid-email':
+          throw CustomException(message: 'The email address is not valid.');
+        case 'user-disabled':
+          throw CustomException(message: 'This user account has been disabled.');
         default:
           throw CustomException(
               message: e.message ?? 'An unknown error occurred.');
       }
+    } catch (e) {
+      throw CustomException(message: 'An unexpected error occurred.');
     }
   }
+
+  Future<void> signOut() async {
+    try {
+      await _firebaseAuth.signOut();
+    } catch (e) {
+      throw CustomException(message: 'Failed to sign out.');
+    }
+  }
+
+  User? get currentUser => _firebaseAuth.currentUser;
 }
